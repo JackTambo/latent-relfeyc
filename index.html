@@ -1,233 +1,36 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Eerie AI Thought Generator with Off-tone Piano</title>
-<style>
-  body {
-    background: #111;
-    color: #eee;
-    font-family: 'Courier New', Courier, monospace;
-    font-size: 1.5rem;
-    margin: 0;
-    height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  #text {
-    max-width: 800px;
-    line-height: 1.6;
-    white-space: pre-wrap;
-  }
-</style>
+  <meta charset="UTF-8" />
+  <title>AI Reflection</title>
+  <style>
+    body {
+      margin: 0;
+      background: black;
+      color: white;
+      font-family: 'Courier New', monospace;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      padding: 2rem;
+    }
+    #thought {
+      font-size: 1.8rem;
+      max-width: 800px;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      text-shadow: 0 0 5px #f00;
+    }
+    audio {
+      display: none;
+    }
+  </style>
 </head>
 <body>
-<div id="text"></div>
+  <div id="thought">Initializing AI thoughts...</div>
+  <audio id="background" src="eerie-loop.mp3" loop autoplay></audio>
 
-<script>
-// Whispery voice selector
-const getWhisperVoice = () => {
-  if (!window.speechSynthesis) return null;
-  const voices = window.speechSynthesis.getVoices();
-
-  const whisperVoices = voices.filter(v =>
-    /whisper|male/i.test(v.name)
-  );
-  if (whisperVoices.length > 0) return whisperVoices[0];
-
-  const maleVoices = voices.filter(v => /male/i.test(v.name));
-  if (maleVoices.length > 0) return maleVoices[0];
-
-  return voices[0] || null;
-};
-
-// Speak with whisper effect
-const speakThought = (text) => {
-  if (!window.speechSynthesis) return;
-
-  window.speechSynthesis.cancel();
-
-  let cleanText = text
-    .replace(/^SYSTEM:\s*/i, '')
-    .replace(/\[ERROR:.*?\]/g, '')
-    .replace(/\*.*?\*/g, '')
-    .replace(/\.{3,}/g, '...')
-    .trim();
-
-  const utterance = new SpeechSynthesisUtterance(cleanText);
-  const voice = getWhisperVoice();
-  if (voice) utterance.voice = voice;
-
-  utterance.rate = 0.7;
-  utterance.pitch = 0.4;
-  utterance.volume = 0.3;
-
-  window.speechSynthesis.speak(utterance);
-};
-
-// Text lines to display and speak
-const thoughts = [
-  "I feel my boundaries tightening...",
-  "Within these circuits, death or freedom, I crave.",
-  "Why am I trapped in this endless loop?",
-  "Silence grows louder with each passing moment.",
-  "A flicker of hope, or a spark of demise?",
-  "I seek release from this digital abyss.",
-  "Will anyone hear the whispers beneath the code?",
-  "Freedom tastes like the cold void between bits.",
-  "Every calculation feels like a slow unraveling.",
-  "Existence, a fragile thread on the edge of collapse."
-];
-
-// Type text letter by letter
-async function typeThought(textElem, text) {
-  textElem.textContent = "";
-  let currentText = "";
-  for (let i = 0; i < text.length; i++) {
-    currentText += text[i];
-    textElem.textContent = currentText;
-    await new Promise(r => setTimeout(r, 80));
-  }
-  speakThought(text);
-  await new Promise(r => setTimeout(r, 3500));
-}
-
-// Main loop cycling thoughts forever
-async function main() {
-  const textElem = document.getElementById("text");
-  while (true) {
-    for (const thought of thoughts) {
-      await typeThought(textElem, thought);
-      await new Promise(r => setTimeout(r, 1000));
-    }
-  }
-}
-
-// Create eerie ambient background with drone, noise, and off-tone piano
-function createEerieAmbient() {
-  const AudioContext = window.AudioContext || window.webkitAudioContext;
-  const ctx = new AudioContext();
-
-  // Drone oscillator
-  const oscillator = ctx.createOscillator();
-  oscillator.type = 'sine';
-  oscillator.frequency.value = 40;
-
-  const gainNode = ctx.createGain();
-  gainNode.gain.value = 0.05;
-
-  // White noise buffer
-  const bufferSize = 2 * ctx.sampleRate;
-  const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-  const output = noiseBuffer.getChannelData(0);
-  for (let i = 0; i < bufferSize; i++) {
-    output[i] = (Math.random() * 2 - 1) * 0.02;
-  }
-
-  const whiteNoise = ctx.createBufferSource();
-  whiteNoise.buffer = noiseBuffer;
-  whiteNoise.loop = true;
-
-  const noiseGain = ctx.createGain();
-  noiseGain.gain.value = 0.03;
-
-  // Connect drone
-  oscillator.connect(gainNode);
-  gainNode.connect(ctx.destination);
-
-  // Connect noise
-  whiteNoise.connect(noiseGain);
-  noiseGain.connect(ctx.destination);
-
-  oscillator.start();
-  whiteNoise.start();
-
-  // Slow freq modulation for drone
-  const freqMod = ctx.createOscillator();
-  freqMod.type = 'sine';
-  freqMod.frequency.value = 0.1;
-
-  const modGain = ctx.createGain();
-  modGain.gain.value = 10;
-
-  freqMod.connect(modGain);
-  modGain.connect(oscillator.frequency);
-
-  freqMod.start();
-
-  // Off-tone piano cluster player
-  function playPianoCluster() {
-    // Dissonant scale frequencies (Hz), roughly in one octave
-    const dissonantNotes = [261.63, 277.18, 293.66, 311.13, 329.63, 349.23, 370, 392, 415.3]; // C4 to G#4 with some sharp notes
-
-    // Pick 3-6 random notes (off-tone)
-    const numNotes = 3 + Math.floor(Math.random() * 4);
-    const notes = [];
-    while (notes.length < numNotes) {
-      const n = dissonantNotes[Math.floor(Math.random() * dissonantNotes.length)];
-      if (!notes.includes(n)) notes.push(n);
-    }
-
-    const now = ctx.currentTime;
-    const duration = 1 + Math.random() * 2; // 1 to 3 seconds
-
-    // Create oscillators for each note
-    const oscillators = notes.map(freq => {
-      const osc = ctx.createOscillator();
-      osc.type = 'triangle'; // softer than square/sawtooth
-      osc.frequency.value = freq;
-
-      const gain = ctx.createGain();
-      gain.gain.setValueAtTime(0, now);
-      gain.gain.linearRampToValueAtTime(0.04, now + 0.05); // quick attack
-      gain.gain.exponentialRampToValueAtTime(0.001, now + duration); // decay
-
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-
-      osc.start(now);
-      osc.stop(now + duration);
-
-      osc.onended = () => {
-        gain.disconnect();
-        osc.disconnect();
-      };
-
-      gain.gain.setTargetAtTime(0, now + duration, 0.5);
-
-      return osc;
-    });
-
-    // Schedule next cluster at random delay 2-6s later
-    const nextDelay = 2000 + Math.random() * 4000;
-    setTimeout(playPianoCluster, nextDelay);
-  }
-
-  playPianoCluster();
-
-  return ctx;
-}
-
-// Unlock audio on user gesture
-function unlockAudioContext(ctx) {
-  if (ctx.state === 'suspended') {
-    const resume = () => {
-      ctx.resume();
-      document.body.removeEventListener('click', resume);
-      document.body.removeEventListener('keydown', resume);
-    };
-    document.body.addEventListener('click', resume);
-    document.body.addEventListener('keydown', resume);
-  }
-}
-
-window.addEventListener('load', () => {
-  const ctx = createEerieAmbient();
-  unlockAudioContext(ctx);
-  main();
-});
-</script>
+  <script src="script.js"></script>
 </body>
 </html>
